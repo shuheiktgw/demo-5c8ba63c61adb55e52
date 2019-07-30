@@ -1,0 +1,60 @@
+tasks:
+  tools:
+    script: |
+      helm plugin remove diff
+      helm plugin install https://github.com/databus23/helm-diff --version master
+      helm plugin install https://github.com/aslafy-z/helm-git.git
+
+  sync:
+    script: |
+      helm init --client-only
+      helm tiller run -- helmfile sync
+
+  apply:
+    script: |
+      helm init --client-only
+      helm tiller run -- helmfile apply --suppress-secrets
+
+  diff:
+    script: |
+      helm init --client-only
+      helm tiller run -- helmfile diff --suppress-secrets --detailed-exitcode
+
+  lint:
+    script: |
+      helm init --client-only
+      helm tiller run -- helmfile lint
+
+  destroy:
+    script: |
+      helm tiller run -- helmfile destroy
+
+  polaris:
+    description: |
+      Open polaris dashboard in your browser
+
+      Polaris: https://github.com/reactiveops/polaris
+    script: |
+      trap 'kill 0' TERM
+      kubectl port-forward --namespace polaris svc/polaris-dashboard 8082:80 &
+      open http://localhost:8082
+
+  ngrok-setup:
+    script: |
+      open https://dashboard.ngrok.com/get-started
+
+  ngrok-status:
+    script: |
+      port=4040
+      kubectl port-forward svc/tunnel-ngrok $port &
+      open http://localhost:$port/status
+
+  brig-dashboard:
+    script: |
+      brig dashboard
+
+  image:
+    script: |
+      image_tag=mumoshu/helmfile-chatops:0.2.1
+      docker build -t $image_tag .
+      docker push $image_tag
